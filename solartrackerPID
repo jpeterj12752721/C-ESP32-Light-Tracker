@@ -1,0 +1,42 @@
+#include <ESP32Servo.h>
+
+Servo myServo;
+const int SERVO_PIN   = 18;
+const int SENSOR_PIN1 = 34; // Right LDR
+const int SENSOR_PIN2 = 35; // Left LDR
+
+int servoPosition = 90;
+int tolerance = 120; // Deadband threshold for 12-bit ADC (0 - 4095)
+
+void setup() {
+  Serial.begin(115200);
+
+  ESP32PWM::allocateTimer(0);
+  myServo.setPeriodHertz(50);
+  myServo.attach(SERVO_PIN, 500, 2400);
+
+  myServo.write(servoPosition);
+}
+
+void loop() {
+  int sensor1 = analogRead(SENSOR_PIN1);
+  int sensor2 = analogRead(SENSOR_PIN2);
+
+  int lightDifference = sensor1 - sensor2;
+
+  if (lightDifference > tolerance) {
+    if (servoPosition > 0) servoPosition -= 1;
+  } 
+  else if (lightDifference < -tolerance) {
+    if (servoPosition < 180) servoPosition += 1;
+  }
+
+  myServo.write(servoPosition);
+
+  Serial.print("Right: "); Serial.print(sensor1);
+  Serial.print(" | Left: "); Serial.print(sensor2);
+  Serial.print(" | Angle: "); Serial.println(servoPosition);
+
+  delay(15);
+
+}
